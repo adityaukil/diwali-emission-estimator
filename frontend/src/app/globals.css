@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --night-sky-dark: #030712;
+  --night-sky-blue: #070e24;
+  --night-sky-card: #0b1536;
+  --night-sky-card-hover: #101e4a;
+  --night-sky-border: rgba(255, 215, 0, 0.22);
+  
+  --gold-glow: 0 0 15px rgba(255, 215, 0, 0.45);
+  --gold-glow-intense: 0 0 28px rgba(255, 215, 0, 0.85), 0 0 55px rgba(245, 158, 11, 0.5);
+  --gold-text-glow: 0 0 20px rgba(255, 215, 0, 0.65), 0 0 40px rgba(245, 158, 11, 0.4);
+  --ember-glow: 0 0 12px rgba(249, 115, 22, 0.6);
+  
+  --gold-primary: #FFD700;
+  --gold-warm: #F59E0B;
+  --flame-orange: #FF6B00;
+  --spark-bright: #FFF275;
+}
+
+body {
+  background-color: var(--night-sky-dark);
+  color: #f1f5f9;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Diwali Gold Shimmer & Glow Utilities */
+.diwali-title-glow {
+  text-shadow: var(--gold-text-glow);
+  background: linear-gradient(135deg, #FFF9D2 0%, #FFD700 50%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-glow-btn {
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gold-glow-btn:hover {
+  box-shadow: var(--gold-glow-intense);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.gold-glow-btn:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.diwali-card {
+  background: linear-gradient(180deg, rgba(14, 25, 60, 0.85) 0%, rgba(7, 14, 36, 0.95) 100%);
+  border: 1px solid var(--night-sky-border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(255, 215, 0, 0.1);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+}
+
+.diwali-card:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 215, 0, 0.15);
+}
+
+.diwali-card-active {
+  border-color: rgba(255, 215, 0, 0.75);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
+}
+
+/* Animated Diya Flame */
+@keyframes flameFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(-1deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 8px #FF6B00);
+  }
+  25% {
+    transform: scale(1.08, 0.95) rotate(2deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #FFD700);
+  }
+  50% {
+    transform: scale(0.96, 1.05) rotate(-2deg);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 10px #FF9E00);
+  }
+  75% {
+    transform: scale(1.04, 0.98) rotate(1deg);
+    opacity: 0.98;
+    filter: drop-shadow(0 0 16px #FFD700);
+  }
+}
+
+.flame-animated {
+  animation: flameFlicker 1.8s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
+/* Sparkle Floating Keyframe */
+@keyframes floatSpark {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-120px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Custom Range Input */
+input[type="range"] {
+  accent-color: #FFD700;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}

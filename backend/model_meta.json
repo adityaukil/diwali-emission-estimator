@@ -1,0 +1,33 @@
+{
+  "features": [
+    "sparklers_count",
+    "flower_pots_count",
+    "ground_spinners_count",
+    "garlands_count",
+    "rockets_count",
+    "wind_speed_kmh",
+    "relative_humidity",
+    "temperature_c"
+  ],
+  "targets": [
+    "pm25_spike",
+    "so2_spike"
+  ],
+  "metrics": {
+    "pm25": {
+      "r2": 0.9824,
+      "mae": 15.9,
+      "rmse": 35.43
+    },
+    "so2": {
+      "r2": 0.9834,
+      "mae": 2.06,
+      "rmse": 4.43
+    }
+  },
+  "default_weather": {
+    "wind_speed_kmh": 3.5,
+    "relative_humidity": 65.0,
+    "temperature_c": 21.0
+  }
+}
