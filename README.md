@@ -1,5 +1,10 @@
 # Diwali Air Quality & Firecracker Emission Estimator
 
+[![Live Demo](https://img.shields.io/badge/Demo-Vercel-brightgreen?style=for-the-badge&logo=vercel)](https://frontend-phi-green-93.vercel.app)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/adityaukil/diwali-emission-estimator)
+
+> 🌐 **Live Web Application**: [https://frontend-phi-green-93.vercel.app](https://frontend-phi-green-93.vercel.app)
+
 An end-to-end full-stack web application with a modern dark-mode Diwali aesthetic, AI-driven emission prediction models, and live health impact indicators.
 
 ---
