@@ -14,7 +14,10 @@ import {
   Info,
   Atom,
   FlaskConical,
-  Sparkles
+  Sparkles,
+  MapPin,
+  HelpCircle,
+  ArrowDown
 } from "lucide-react";
 
 export interface GasesReleased {
@@ -28,6 +31,10 @@ export interface GasesReleased {
 }
 
 export interface PredictionResult {
+  city_id?: string;
+  city_name?: string;
+  city_dispersion_multiplier?: number;
+  city_climate?: string;
   pm25_spike: number;
   so2_spike: number;
   pm10_spike: number;
@@ -79,7 +86,6 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
     }
   };
 
-  // Safe fallback if gases_released was computed on older schema
   const gases = results.gases_released || {
     so2_grams: Math.round(results.so2_spike * 0.45 * 10) / 10,
     co_grams: Math.round(results.pm25_spike * 0.22 * 10) / 10,
@@ -95,6 +101,15 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
     if (num < 10) return num.toFixed(2);
     return num.toFixed(minDecimals);
   };
+
+  const scrollToExplanation = () => {
+    const el = document.getElementById("how-did-i-get-it");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const cityName = results.city_name || "Delhi NCR";
 
   return (
     <section
@@ -113,14 +128,34 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
                 Emission Spike &amp; Atmospheric Loading Dashboard
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Estimated ambient surge based on localized aerosol dispersion dynamics
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/40">
+                <MapPin className="w-3 h-3 text-amber-400" />
+                <span>City: {cityName}</span>
+              </span>
+              {results.city_climate && (
+                <span className="text-xs text-slate-400">
+                  • {results.city_climate}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs text-slate-300 self-start sm:self-auto">
-            <Cpu className="w-3.5 h-3.5 text-amber-400" />
-            <span className="font-mono text-[11px]">{results.model_source}</span>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={scrollToExplanation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-[0_0_10px_rgba(255,215,0,0.2)] cursor-pointer"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+              <span>How did I get it?</span>
+              <ArrowDown className="w-3 h-3" />
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs text-slate-300">
+              <Cpu className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-mono text-[11px]">{results.model_source}</span>
+            </div>
           </div>
         </div>
 
@@ -141,9 +176,9 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
               </div>
             </div>
             <div className="pt-3 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
-              <span>Total with baseline:</span>
+              <span>{cityName} Baseline:</span>
               <strong className="text-amber-300 font-mono">
-                {formatVal(results.total_pm25)} µg/m³
+                {formatVal(results.total_pm25)} µg/m³ total
               </strong>
             </div>
           </div>
@@ -185,7 +220,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
               </div>
             </div>
             <div className="pt-3 border-t border-slate-800 text-xs text-slate-400">
-              Coarse respirable particulates &amp; ash
+              Respirable particulates &amp; ash in {cityName}
             </div>
           </div>
 
@@ -210,7 +245,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
               </div>
             </div>
             <div className="pt-3 border-t border-slate-800 text-xs text-slate-400">
-              National Air Quality Index classification
+              National Air Quality Index ({cityName})
             </div>
           </div>
         </div>
@@ -221,7 +256,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
             <div className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-amber-400" />
               <h3 className="text-base sm:text-lg font-bold text-white">
-                Gaseous &amp; Chemical Emissions Released (Absolute Mass)
+                Gaseous &amp; Chemical Emissions Released (Absolute Mass in {cityName})
               </h3>
             </div>
             <span className="text-xs px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-medium border border-amber-500/30">
@@ -302,83 +337,66 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
             </div>
 
             {/* Heavy Metals */}
-            <div className="p-3.5 rounded-lg bg-slate-900/90 border border-purple-500/30">
-              <span className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider block">
-                Heavy Metal Salts
+            <div className="p-3.5 rounded-lg bg-slate-900/90 border border-rose-500/30">
+              <span className="text-[10px] text-rose-400 font-semibold uppercase tracking-wider block">
+                Heavy Metals / Salts
               </span>
-              <span className="text-xl sm:text-2xl font-extrabold text-purple-300 font-mono block my-1">
-                {Math.round(gases.heavy_metals_mg).toLocaleString()}
+              <span className="text-xl sm:text-2xl font-extrabold text-rose-300 font-mono block my-1">
+                {gases.heavy_metals_mg}
                 <span className="text-xs font-sans text-slate-400 font-normal ml-0.5">mg</span>
               </span>
               <span className="text-[10px] text-slate-400 block">
-                Ba, Sr, Cu oxidizers
+                Barium, Strontium, Copper
               </span>
             </div>
           </div>
 
-          {/* Narrative Summary of Chemical Discharges */}
-          <div className="p-3 rounded-lg bg-slate-950/70 border border-slate-800 text-xs text-slate-300 flex items-start gap-2">
+          {/* Narrative Summary */}
+          <div className="p-3.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-300 flex items-start gap-2.5">
             <Atom className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-            <span>
-              <strong>Chemical Breakdown: </strong>
-              {gases.gas_summary}
-            </span>
+            <p className="leading-relaxed">
+              <strong className="text-amber-300">Chemical Summary:</strong> {gases.gas_summary}
+            </p>
           </div>
         </div>
 
-        {/* Secondary Grid: Benchmarks & Impact Comparisons */}
+        {/* WHO Guideline Exceedance & Health Impact Panel */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* WHO Guideline Exceedance Meter */}
-          <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <ShieldAlert className="w-4 h-4 text-amber-400" />
-                WHO 24-Hour Safe Limit Comparison
-              </span>
-              <span className="text-xs text-slate-400">
-                Safe Limit: 15 µg/m³
-              </span>
+          <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex-shrink-0">
+              <ShieldAlert className="w-5 h-5" />
             </div>
-
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-2xl font-extrabold text-amber-300 font-mono">
-                {results.who_exceedance_factor}×
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-rose-400 block">
+                WHO Air Quality Threshold
               </span>
-              <span className="text-xs text-slate-300">
-                above the World Health Organization 24-hr PM2.5 safety limit
-              </span>
-            </div>
-
-            {/* Progress Gauge */}
-            <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
-              <div
-                className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-amber-400 via-orange-500 to-red-600"
-                style={{
-                  width: `${Math.min(100, Math.max(5, results.who_exceedance_factor * 5))}%`,
-                }}
-              ></div>
+              <div className="text-xl font-bold text-white mt-1">
+                <span className="text-2xl text-rose-400 font-mono">
+                  {results.who_exceedance_factor}×
+                </span>{" "}
+                WHO Safe Daily Limit
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                WHO 24-hr guideline is <strong>15 µg/m³</strong>. Ambient air in {cityName} contains{" "}
+                <strong className="text-white">{formatVal(results.total_pm25)} µg/m³</strong>.
+              </p>
             </div>
           </div>
 
-          {/* Cigarette Inhalation Equivalence */}
-          <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-rose-950/40 text-rose-400 border border-rose-500/30 flex-shrink-0">
-              <Cigarette className="w-6 h-6" />
+          <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex-shrink-0">
+              <Cigarette className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1">
-                Passive Inhalation Equivalence
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-400 block">
+                Toxic Equivalence (Inhalation Index)
               </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-rose-300 font-mono">
-                  ~{results.cigarette_equivalent > 0 ? (results.cigarette_equivalent < 0.1 ? "<0.1" : results.cigarette_equivalent.toFixed(1)) : "0.0"}
-                </span>
-                <span className="text-xs text-slate-300">
-                  cigarettes worth of particulate toxins inhaled in 24h
-                </span>
+              <div className="text-xl font-bold text-white mt-1">
+                ≈ <span className="text-2xl text-amber-300 font-mono">{results.cigarette_equivalent}</span>{" "}
+                Passive Cigarettes
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Based on Berkeley Earth PM2.5 physiological toxic equivalence rule.
+                Based on Berkeley Earth PM2.5 physiological toxic equivalence rule in {cityName}.
               </p>
             </div>
           </div>
@@ -388,7 +406,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
         <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 mb-6">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 mb-4 flex items-center gap-2">
             <Info className="w-4 h-4 text-amber-400" />
-            Firecracker Source Contribution Breakdown
+            Firecracker Source Contribution Breakdown ({cityName})
           </h3>
 
           <div className="space-y-3">
@@ -422,7 +440,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
           <HeartPulse className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="text-xs sm:text-sm">
             <strong className="text-amber-200 block mb-0.5">
-              Public Health Advisory:
+              Public Health Advisory for {cityName}:
             </strong>
             <p className="text-slate-300 leading-relaxed">
               {results.health_advisory}

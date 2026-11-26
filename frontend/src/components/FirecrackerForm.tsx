@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   Sparkles,
   Flame,
-  RotateCw,
   Layers,
   Rocket,
   Sliders,
@@ -13,10 +12,15 @@ import {
   RotateCcw,
   Wind,
   Droplets,
-  Gauge
+  Gauge,
+  Thermometer,
+  RotateCw
 } from "lucide-react";
+import CitySelector from "./CitySelector";
+import { CityConfig } from "@/data/cities";
 
 export interface FirecrackerInputs {
+  city: string;
   sparklers: number;
   flower_pots: number;
   ground_spinners: number;
@@ -33,6 +37,8 @@ interface FirecrackerFormProps {
   setInputs: React.Dispatch<React.SetStateAction<FirecrackerInputs>>;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  selectedCity: CityConfig;
+  onSelectCity: (cityId: string) => void;
 }
 
 interface CrackerConfig {
@@ -59,7 +65,7 @@ const CRACKERS: CrackerConfig[] = [
     icon: Sparkles,
     defaultStep: 5,
     max: 200,
-    pm25PerUnit: "~1.8g PM2.5/unit",
+    pm25PerUnit: "~1.85g PM2.5/unit",
     category: "Spark Fountain",
   },
   {
@@ -113,6 +119,8 @@ export default function FirecrackerForm({
   setInputs,
   onSubmit,
   isLoading,
+  selectedCity,
+  onSelectCity,
 }: FirecrackerFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -173,17 +181,28 @@ export default function FirecrackerForm({
   };
 
   const resetAll = () => {
-    setInputs({
+    setInputs((prev) => ({
+      ...prev,
       sparklers: 0,
       flower_pots: 0,
       ground_spinners: 0,
       garlands: 0,
       rockets: 0,
-      wind_speed_kmh: 3.5,
-      relative_humidity: 65,
-      temperature_c: 21,
-      baseline_pm25: 120,
-    });
+      wind_speed_kmh: selectedCity.wind_avg,
+      relative_humidity: selectedCity.humidity_avg,
+      temperature_c: selectedCity.temp_avg,
+      baseline_pm25: selectedCity.base_pm25,
+    }));
+  };
+
+  const resetToCityDefaults = () => {
+    setInputs((prev) => ({
+      ...prev,
+      wind_speed_kmh: selectedCity.wind_avg,
+      relative_humidity: selectedCity.humidity_avg,
+      temperature_c: selectedCity.temp_avg,
+      baseline_pm25: selectedCity.base_pm25,
+    }));
   };
 
   const totalCrackers =
@@ -195,16 +214,22 @@ export default function FirecrackerForm({
 
   return (
     <section className="max-w-5xl mx-auto px-4 mb-12">
+      {/* 1. Dedicated City Selector */}
+      <CitySelector
+        selectedCityId={selectedCity.id}
+        onSelectCity={onSelectCity}
+      />
+
       <form onSubmit={onSubmit} className="diwali-card rounded-2xl p-6 sm:p-8">
         {/* Header & Preset Buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-amber-500/20 mb-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#FFD700]"></span>
-              Select Firecracker Inventory
+              Step 2: Select Firecracker Inventory for {selectedCity.name}
             </h2>
             <p className="text-sm text-slate-400 mt-0.5">
-              Input units to calculate anticipated atmospheric mass loading
+              Input units to calculate anticipated atmospheric mass loading in {selectedCity.name}
             </p>
           </div>
 
@@ -216,29 +241,29 @@ export default function FirecrackerForm({
             <button
               type="button"
               onClick={() => applyPreset("eco")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/50 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/50 transition-colors cursor-pointer"
             >
               🌱 Minimal / Green
             </button>
             <button
               type="button"
               onClick={() => applyPreset("family")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-950/60 text-amber-300 border border-amber-500/30 hover:bg-amber-900/50 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-950/60 text-amber-300 border border-amber-500/30 hover:bg-amber-900/50 transition-colors cursor-pointer"
             >
               🪔 Family Festive
             </button>
             <button
               type="button"
               onClick={() => applyPreset("gala")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-950/60 text-rose-300 border border-rose-500/30 hover:bg-rose-900/50 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-950/60 text-rose-300 border border-rose-500/30 hover:bg-rose-900/50 transition-colors cursor-pointer"
             >
               💥 Block Gala
             </button>
             <button
               type="button"
               onClick={resetAll}
-              title="Reset All"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-700/50 transition-colors"
+              title="Reset Cracker Counts"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-700/50 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -304,7 +329,7 @@ export default function FirecrackerForm({
                         updateQuantity(cracker.key, -1, 0, cracker.max)
                       }
                       disabled={currentQty === 0}
-                      className="w-8 h-8 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold text-lg"
+                      className="w-8 h-8 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold text-lg cursor-pointer"
                     >
                       -
                     </button>
@@ -326,7 +351,7 @@ export default function FirecrackerForm({
                       onClick={() =>
                         updateQuantity(cracker.key, 1, 0, cracker.max)
                       }
-                      className="w-8 h-8 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-bold text-lg"
+                      className="w-8 h-8 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-bold text-lg cursor-pointer"
                     >
                       +
                     </button>
@@ -339,26 +364,39 @@ export default function FirecrackerForm({
 
         {/* Collapsible Advanced Atmospheric Parameters */}
         <div className="mb-8">
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors"
-          >
-            <Sliders className="w-4 h-4" />
-            <span>
-              {showAdvanced
-                ? "Hide Atmospheric & Weather Parameters"
-                : "Customize Weather & Ambient Conditions (Wind, Humidity, Baseline)"}
-            </span>
-            {showAdvanced ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+            >
+              <Sliders className="w-4 h-4" />
+              <span>
+                {showAdvanced
+                  ? `Hide Weather Parameters for ${selectedCity.name}`
+                  : `Customize Weather & Baseline (Wind, Humidity, Temp) for ${selectedCity.name}`}
+              </span>
+              {showAdvanced ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+
+            {showAdvanced && (
+              <button
+                type="button"
+                onClick={resetToCityDefaults}
+                className="text-[11px] text-amber-300 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCw className="w-3 h-3" />
+                <span>Reset to {selectedCity.name} Historical Averages</span>
+              </button>
             )}
-          </button>
+          </div>
 
           {showAdvanced && (
-            <div className="mt-4 p-5 rounded-xl bg-slate-950/70 border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in duration-200">
+            <div className="mt-4 p-5 rounded-xl bg-slate-950/70 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-200">
               {/* Wind Speed */}
               <div>
                 <div className="flex items-center justify-between text-xs font-medium mb-2 text-slate-300">
@@ -385,7 +423,7 @@ export default function FirecrackerForm({
                   className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
                 />
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  Calm air traps pollution; higher wind disperses smoke.
+                  Typical Diwali night wind in {selectedCity.name}: {selectedCity.wind_avg} km/h
                 </span>
               </div>
 
@@ -394,7 +432,7 @@ export default function FirecrackerForm({
                 <div className="flex items-center justify-between text-xs font-medium mb-2 text-slate-300">
                   <span className="flex items-center gap-1.5">
                     <Gauge className="w-4 h-4 text-emerald-400" />
-                    Pre-Diwali Ambient PM2.5
+                    Pre-Diwali Baseline PM2.5
                   </span>
                   <span className="font-mono text-amber-300">
                     {inputs.baseline_pm25} µg/m³
@@ -402,9 +440,9 @@ export default function FirecrackerForm({
                 </div>
                 <input
                   type="range"
-                  min="30"
+                  min="20"
                   max="350"
-                  step="10"
+                  step="5"
                   value={inputs.baseline_pm25}
                   onChange={(e) =>
                     setInputs((p) => ({
@@ -415,7 +453,7 @@ export default function FirecrackerForm({
                   className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
                 />
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  Average urban background prior to evening burst hours.
+                  15-Yr CPCB average for {selectedCity.name}: {selectedCity.base_pm25} µg/m³
                 </span>
               </div>
 
@@ -445,45 +483,69 @@ export default function FirecrackerForm({
                   className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
                 />
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  High humidity promotes winter smog / secondary aerosol formation.
+                  {selectedCity.name} typical Diwali humidity: {selectedCity.humidity_avg}%
+                </span>
+              </div>
+
+              {/* Temperature */}
+              <div>
+                <div className="flex items-center justify-between text-xs font-medium mb-2 text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Thermometer className="w-4 h-4 text-rose-400" />
+                    Ambient Temperature
+                  </span>
+                  <span className="font-mono text-amber-300">
+                    {inputs.temperature_c}°C
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="38"
+                  step="1"
+                  value={inputs.temperature_c}
+                  onChange={(e) =>
+                    setInputs((p) => ({
+                      ...p,
+                      temperature_c: parseInt(e.target.value, 10),
+                    }))
+                  }
+                  className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                />
+                <span className="text-[10px] text-slate-500 block mt-1">
+                  Diwali night average: {selectedCity.temp_avg}°C
                 </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Total Crackers & Submit Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-amber-500/20">
-          <div className="text-center sm:text-left">
-            <div className="text-xs uppercase font-medium text-slate-400">
-              Total Crackers Selected
-            </div>
-            <div className="text-2xl font-extrabold text-amber-300 font-mono">
-              {totalCrackers}{" "}
-              <span className="text-xs text-slate-400 font-sans font-normal">
-                units
-              </span>
-            </div>
+        {/* Submit Action Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-amber-500/20">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span className="font-medium text-slate-300">
+              Total Units Selected:
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-amber-300 font-mono font-bold">
+              {totalCrackers} firecrackers
+            </span>
+            <span className="text-slate-500">• In {selectedCity.name}</span>
           </div>
 
           <button
             type="submit"
-            disabled={isLoading || totalCrackers === 0}
-            className={`w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-base text-slate-950 flex items-center justify-center gap-3 transition-all duration-300 gold-glow-btn ${
-              totalCrackers === 0
-                ? "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60"
-                : "bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-slate-950"
-            }`}
+            disabled={isLoading}
+            className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 transition-all duration-300 diwali-glow hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.35)]"
           >
             {isLoading ? (
               <>
-                <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-                <span>Executing ML Inference Model...</span>
+                <RotateCw className="w-4 h-4 animate-spin text-slate-950" />
+                <span>Running City Model for {selectedCity.name}...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5 text-slate-950" />
-                <span>Calculate Emission Impact</span>
+                <Sparkles className="w-4 h-4 text-slate-950" />
+                <span>Calculate Emission Impact for {selectedCity.name}</span>
               </>
             )}
           </button>

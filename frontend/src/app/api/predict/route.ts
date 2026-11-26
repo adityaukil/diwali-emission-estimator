@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CITIES, getCityById } from "@/data/cities";
 
 const PYTHON_BACKEND_URL = process.env.BACKEND_INTERNAL_URL || "http://127.0.0.1:8000";
 
@@ -20,26 +21,30 @@ function getAqiCategory(pm25Total: number): [string, string] {
   return ["Hazardous / Emergency", "#7F1D1D"];
 }
 
-function getHealthAdvisory(pm25Total: number): string {
-  if (pm25Total <= 60) return "Air quality is acceptable. Minimal health impact anticipated for healthy individuals.";
-  if (pm25Total <= 120) return "May cause breathing discomfort to people with asthma and heart conditions on prolonged exposure.";
-  if (pm25Total <= 250) return "Respiratory illness on prolonged exposure. Elderly, pregnant women, and children should limit outdoor exposure.";
-  if (pm25Total <= 380) return "Severe health warning. May cause respiratory distress and cardiovascular aggravation. Use N95 masks indoors/outdoors.";
-  return "Emergency alert. Toxic particulate surge. Entire population at severe risk of acute pulmonary irritation. Stay strictly indoors.";
+function getHealthAdvisory(pm25Total: number, cityName: string): string {
+  if (pm25Total <= 60) return `Air quality in ${cityName} is acceptable. Minimal health impact anticipated for healthy individuals.`;
+  if (pm25Total <= 120) return `May cause breathing discomfort in ${cityName} to people with asthma and heart conditions on prolonged exposure.`;
+  if (pm25Total <= 250) return `Respiratory illness on prolonged exposure in ${cityName}. Sensitive individuals should limit outdoor exposure.`;
+  if (pm25Total <= 380) return `Severe health warning for ${cityName}. May cause acute respiratory distress. Use certified N95 masks.`;
+  return `Emergency alert for ${cityName}. Toxic particulate surge. Entire population at severe risk of acute pulmonary irritation. Stay strictly indoors.`;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const cityId = (body.city || "delhi").toLowerCase();
+    const cityConfig = getCityById(cityId);
+
     const sparklers = Number(body.sparklers) || 0;
     const flower_pots = Number(body.flower_pots) || 0;
     const ground_spinners = Number(body.ground_spinners) || 0;
     const garlands = Number(body.garlands) || 0;
     const rockets = Number(body.rockets) || 0;
-    const wind_speed_kmh = Number(body.wind_speed_kmh) || 3.5;
-    const relative_humidity = Number(body.relative_humidity) || 65.0;
-    const temperature_c = Number(body.temperature_c) || 21.0;
-    const baseline_pm25 = Number(body.baseline_pm25) || 120.0;
+
+    const wind_speed_kmh = body.wind_speed_kmh !== undefined && body.wind_speed_kmh !== null ? Number(body.wind_speed_kmh) : cityConfig.wind_avg;
+    const relative_humidity = body.relative_humidity !== undefined && body.relative_humidity !== null ? Number(body.relative_humidity) : cityConfig.humidity_avg;
+    const temperature_c = body.temperature_c !== undefined && body.temperature_c !== null ? Number(body.temperature_c) : cityConfig.temp_avg;
+    const baseline_pm25 = body.baseline_pm25 !== undefined && body.baseline_pm25 !== null ? Number(body.baseline_pm25) : cityConfig.base_pm25;
 
     const totalCount = sparklers + flower_pots + ground_spinners + garlands + rockets;
 
@@ -51,6 +56,7 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          city: cityId,
           sparklers,
           flower_pots,
           ground_spinners,
@@ -67,7 +73,6 @@ export async function POST(req: NextRequest) {
 
       if (pyRes.ok) {
         const pyData = await pyRes.json();
-        // If the Python model returned a valid positive spike (or totalCount == 0), return it!
         if (totalCount === 0 || pyData.pm25_spike > 0) {
           return NextResponse.json(pyData);
         }
@@ -76,8 +81,9 @@ export async function POST(req: NextRequest) {
       // Backend offline or timeout -> proceed to continuous physics dispersion calculation
     }
 
-    // 2. Physics-based CPCB Dispersion Engine fallback (guaranteed positive non-zero result for crackers > 0)
+    // 2. Continuous CPCB Box Dispersion Engine with City-Specific Topographical Modulation
     const dispersion = 1.0 / (wind_speed_kmh * 0.4 + 1.0);
+    const cityMultiplier = cityConfig.dispersion_multiplier;
 
     const pm25_emitted_g =
       sparklers * (EMISSION_FACTORS.sparklers.pm25_mg / 1000.0) +
@@ -125,16 +131,16 @@ export async function POST(req: NextRequest) {
     let so2_spike = 0.0;
 
     if (totalCount > 0) {
-      pm25_spike = Math.round(pm25_emitted_g * 0.85 * dispersion * 100) / 100;
-      so2_spike = Math.round(so2_emitted_g * 0.42 * dispersion * 100) / 100;
-      // Minimum perceptible physical threshold for any burned cracker
-      pm25_spike = Math.max(0.25, pm25_spike);
-      so2_spike = Math.max(0.05, so2_spike);
+      pm25_spike = Math.round(pm25_emitted_g * 0.85 * dispersion * cityMultiplier * 100) / 100;
+      so2_spike = Math.round(so2_emitted_g * 0.42 * dispersion * cityMultiplier * 100) / 100;
+      pm25_spike = Math.max(0.2, pm25_spike);
+      so2_spike = Math.max(0.04, so2_spike);
     }
 
     const pm10_spike = Math.round(pm25_spike * 1.48 * 100) / 100;
     const total_pm25 = Math.round((baseline_pm25 + pm25_spike) * 100) / 100;
-    const total_so2 = Math.round((18.0 + so2_spike) * 100) / 100;
+    const baseline_so2 = cityConfig.base_so2;
+    const total_so2 = Math.round((baseline_so2 + so2_spike) * 100) / 100;
 
     const [aqi_category, aqi_color] = getAqiCategory(total_pm25);
 
@@ -172,28 +178,32 @@ export async function POST(req: NextRequest) {
       pm25_mass_grams: Math.round(pm25_emitted_g * 100) / 100,
       pm10_mass_grams: Math.round(pm10_emitted_g * 100) / 100,
       heavy_metals_mg: Math.round(metals_emitted_mg * 10) / 10,
-      gas_summary: `${Math.round((so2_emitted_g + co_emitted_g + no2_emitted_g) * 100) / 100}g of reactive combustion gases released (${Math.round(so2_emitted_g * 100) / 100}g SO2, ${Math.round(co_emitted_g * 100) / 100}g CO, ${Math.round(no2_emitted_g * 100) / 100}g NO2) with ${Math.round(pm25_emitted_g * 100) / 100}g of fine PM2.5 and ${Math.round(metals_emitted_mg)}mg of heavy metal salts.`,
+      gas_summary: `${Math.round((so2_emitted_g + co_emitted_g + no2_emitted_g) * 100) / 100}g of reactive combustion gases released (${Math.round(so2_emitted_g * 100) / 100}g SO2, ${Math.round(co_emitted_g * 100) / 100}g CO, ${Math.round(no2_emitted_g * 100) / 100}g NO2) with ${Math.round(pm25_emitted_g * 100) / 100}g of fine PM2.5 and ${Math.round(metals_emitted_mg)}mg of heavy metal salts into ${cityConfig.name}.`,
     };
 
     const cigarette_equivalent = pm25_spike > 0 ? Math.round((pm25_spike / 22.0) * 10) / 10 : 0.0;
 
     return NextResponse.json({
+      city_id: cityConfig.id,
+      city_name: cityConfig.name,
+      city_dispersion_multiplier: cityConfig.dispersion_multiplier,
+      city_climate: cityConfig.climate,
       pm25_spike,
       so2_spike,
       pm10_spike,
       baseline_pm25,
       total_pm25,
-      baseline_so2: 18.0,
+      baseline_so2,
       total_so2,
       aqi_category,
       aqi_color,
       who_guideline_pm25: 15.0,
       who_exceedance_factor: Math.round((total_pm25 / 15.0) * 10) / 10,
       cigarette_equivalent,
-      health_advisory: getHealthAdvisory(total_pm25),
+      health_advisory: getHealthAdvisory(total_pm25, cityConfig.name),
       breakdown,
       gases_released,
-      model_source: "Calibrated CPCB Atmospheric Dispersion Engine",
+      model_source: `Calibrated CPCB Atmospheric Dispersion Engine (${cityConfig.name})`,
     });
   } catch (error) {
     console.error("API /api/predict error:", error);

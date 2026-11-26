@@ -1,17 +1,22 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Flame, Wind, Activity } from "lucide-react";
+import { Sparkles, Flame, Wind, Activity, MapPin } from "lucide-react";
 
 export default function HeroSection() {
   return (
     <header className="relative pt-12 pb-8 px-4 text-center max-w-5xl mx-auto">
       {/* Decorative Diwali Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium mb-6 shadow-inner shadow-amber-500/10">
+      <div className="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium mb-6 shadow-inner shadow-amber-500/10">
         <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
         <span>Diwali Festival Environmental Intelligence</span>
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-        <span className="text-amber-200/80">CPCB & WHO Benchmarks</span>
+        <span className="text-amber-200/90 font-semibold flex items-center gap-1">
+          <MapPin className="w-3 h-3 text-amber-400" />
+          <span>All 13 Major Indian Cities &amp; Metros</span>
+        </span>
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 hidden sm:inline"></span>
+        <span className="text-amber-200/80 hidden sm:inline">15-Yr CPCB Ground Truth (2011–2025)</span>
       </div>
 
       {/* Hero Title with Glowing Gold Effect */}
@@ -26,10 +31,10 @@ export default function HeroSection() {
 
       {/* Subtitle */}
       <p className="text-slate-300 text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed font-light">
-        Quantify the atmospheric impact of your festive bursts. Predict real-time{" "}
+        Choose your city to quantify localized atmospheric loading. Predict real-time{" "}
         <strong className="text-amber-300 font-semibold">PM2.5</strong> and{" "}
         <strong className="text-amber-300 font-semibold">SO₂</strong> pollution spikes
-        using trained Machine Learning models trained on historical CPCB sensor telemetry.
+        calibrated against 15 years of continuous CPCB air monitoring telemetry across all major Indian cities.
       </p>
 
       {/* Festive Diya Decorative Icon */}

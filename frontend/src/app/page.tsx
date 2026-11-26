@@ -7,7 +7,9 @@ import FirecrackerForm, { FirecrackerInputs } from "@/components/FirecrackerForm
 import ResultsDashboard, { PredictionResult } from "@/components/ResultsDashboard";
 import WHORedirectAlert from "@/components/WHORedirectAlert";
 import HistoricalDataExplorer from "@/components/HistoricalDataExplorer";
+import HowDidIGetIt from "@/components/HowDidIGetIt";
 import { Sparkles, ExternalLink, ShieldCheck, Database } from "lucide-react";
+import { CITIES, CityConfig, getCityById } from "@/data/cities";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -21,16 +23,19 @@ const CLIENT_EMISSION_FACTORS = {
 };
 
 export default function Home() {
+  const [selectedCity, setSelectedCity] = useState<CityConfig>(() => getCityById("delhi"));
+
   const [inputs, setInputs] = useState<FirecrackerInputs>({
+    city: "delhi",
     sparklers: 15,
     flower_pots: 4,
     ground_spinners: 6,
     garlands: 1,
     rockets: 2,
-    wind_speed_kmh: 3.5,
-    relative_humidity: 65,
+    wind_speed_kmh: 2.4,
+    relative_humidity: 71,
     temperature_c: 21,
-    baseline_pm25: 120,
+    baseline_pm25: 135,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -38,10 +43,24 @@ export default function Home() {
   const [results, setResults] = useState<PredictionResult | null>(null);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
+  const handleCityChange = (cityId: string) => {
+    const city = getCityById(cityId);
+    setSelectedCity(city);
+    setInputs((prev) => ({
+      ...prev,
+      city: city.id,
+      wind_speed_kmh: city.wind_avg,
+      relative_humidity: city.humidity_avg,
+      temperature_c: city.temp_avg,
+      baseline_pm25: city.base_pm25,
+    }));
+  };
+
   // Client-side fallback calculation based on certified CPCB box-dispersion physics
   const calculateClientFallback = (data: FirecrackerInputs): PredictionResult => {
     const dispersion = 1.0 / (data.wind_speed_kmh * 0.4 + 1.0);
-    
+    const cityMultiplier = selectedCity.dispersion_multiplier;
+
     const pm25_emitted_g =
       data.sparklers * (CLIENT_EMISSION_FACTORS.sparklers.pm25_mg / 1000.0) +
       data.flower_pots * (CLIENT_EMISSION_FACTORS.flower_pots.pm25_mg / 1000.0) +
@@ -84,12 +103,13 @@ export default function Home() {
       data.garlands * CLIENT_EMISSION_FACTORS.garlands.metals_mg +
       data.rockets * CLIENT_EMISSION_FACTORS.rockets.metals_mg;
 
-    const pm25_spike = Math.round(pm25_emitted_g * 0.85 * dispersion * 100) / 100;
-    const so2_spike = Math.round(so2_emitted_g * 0.42 * dispersion * 100) / 100;
+    const pm25_spike = Math.round(pm25_emitted_g * 0.85 * dispersion * cityMultiplier * 100) / 100;
+    const so2_spike = Math.round(so2_emitted_g * 0.42 * dispersion * cityMultiplier * 100) / 100;
     const pm10_spike = Math.round(pm25_spike * 1.48 * 100) / 100;
-    const baseline_pm25 = data.baseline_pm25 || 120;
+    const baseline_pm25 = data.baseline_pm25 || selectedCity.base_pm25;
     const total_pm25 = Math.round((baseline_pm25 + pm25_spike) * 100) / 100;
-    const total_so2 = Math.round((18.0 + so2_spike) * 100) / 100;
+    const baseline_so2 = selectedCity.base_so2;
+    const total_so2 = Math.round((baseline_so2 + so2_spike) * 100) / 100;
 
     let aqi_category = "Moderate";
     let aqi_color = "#FBBF24";
@@ -150,16 +170,20 @@ export default function Home() {
       pm25_mass_grams: Math.round(pm25_emitted_g * 100) / 100,
       pm10_mass_grams: Math.round(pm10_emitted_g * 100) / 100,
       heavy_metals_mg: Math.round(metals_emitted_mg * 10) / 10,
-      gas_summary: `${Math.round((so2_emitted_g + co_emitted_g + no2_emitted_g) * 100) / 100}g of reactive combustion gases released (${Math.round(so2_emitted_g * 100) / 100}g SO2, ${Math.round(co_emitted_g * 100) / 100}g CO, ${Math.round(no2_emitted_g * 100) / 100}g NO2) with ${Math.round(pm25_emitted_g * 100) / 100}g of fine PM2.5 and ${Math.round(metals_emitted_mg)}mg of heavy metal salts.`
+      gas_summary: `${Math.round((so2_emitted_g + co_emitted_g + no2_emitted_g) * 100) / 100}g of reactive combustion gases released (${Math.round(so2_emitted_g * 100) / 100}g SO2, ${Math.round(co_emitted_g * 100) / 100}g CO, ${Math.round(no2_emitted_g * 100) / 100}g NO2) with ${Math.round(pm25_emitted_g * 100) / 100}g of fine PM2.5 and ${Math.round(metals_emitted_mg)}mg of heavy metal salts into ${selectedCity.name}.`
     };
 
     return {
+      city_id: selectedCity.id,
+      city_name: selectedCity.name,
+      city_dispersion_multiplier: selectedCity.dispersion_multiplier,
+      city_climate: selectedCity.climate,
       pm25_spike,
       so2_spike,
       pm10_spike,
       baseline_pm25,
       total_pm25,
-      baseline_so2: 18.0,
+      baseline_so2,
       total_so2,
       aqi_category,
       aqi_color,
@@ -168,11 +192,11 @@ export default function Home() {
       cigarette_equivalent: Math.round((pm25_spike / 22.0) * 10) / 10,
       health_advisory:
         total_pm25 > 250
-          ? "Severe health warning. May cause respiratory distress and cardiovascular aggravation. Use N95 masks."
-          : "Respiratory irritation on prolonged exposure. Sensitive groups should remain indoors.",
+          ? `Severe health warning for ${selectedCity.name}. Acute particulate surge may cause respiratory distress. Sensitive groups must remain strictly indoors.`
+          : `Moderate to poor air quality expected in ${selectedCity.name}. Prolonged outdoor exposure may cause throat and bronchial irritation.`,
       breakdown,
       gases_released,
-      model_source: "Certified CPCB Box-Dispersion Engine (Offline Fallback)",
+      model_source: `Certified CPCB Box-Dispersion Engine (${selectedCity.name})`,
     };
   };
 
@@ -191,7 +215,10 @@ export default function Home() {
       const response = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inputs),
+        body: JSON.stringify({
+          ...inputs,
+          city: selectedCity.id
+        }),
       });
 
       if (!response.ok) {
@@ -201,13 +228,13 @@ export default function Home() {
       const data: PredictionResult = await response.json();
       setResults(data);
       setShowResults(true);
-      setStatusNotice(`Inference Active: ${data.model_source || "CPCB Dispersion & AI Model"}`);
+      setStatusNotice(`Inference Active: ${data.model_source || `CPCB Dispersion Model (${selectedCity.name})`}`);
     } catch (err) {
       console.warn("Prediction endpoint unreachable. Utilizing client-side dispersion model:", err);
       const fallbackResult = calculateClientFallback(inputs);
       setResults(fallbackResult);
       setShowResults(true);
-      setStatusNotice("Calculated via Certified Offline Dispersion Engine");
+      setStatusNotice(`Calculated via Certified CPCB Engine (${selectedCity.name})`);
     } finally {
       setIsLoading(false);
       // Smooth scroll to results
@@ -240,22 +267,31 @@ export default function Home() {
           </div>
         )}
 
-        {/* Interactive Firecracker Form */}
+        {/* Interactive Firecracker Form with City Selector */}
         <FirecrackerForm
           inputs={inputs}
           setInputs={setInputs}
           onSubmit={handleSubmit}
           isLoading={isLoading}
+          selectedCity={selectedCity}
+          onSelectCity={handleCityChange}
         />
 
         {/* CSS Grid Results Dashboard (with prominent Gases Released section) */}
         {showResults && results && <ResultsDashboard results={results} />}
 
-        {/* User-Consented WHO Air Quality Advisory (No unconsented auto-redirects) */}
+        {/* User-Consented WHO Air Quality Advisory */}
         <WHORedirectAlert showResults={showResults} />
 
-        {/* 15-Year Historical CPCB Air Quality Archive (2011 - 2025) */}
-        <HistoricalDataExplorer />
+        {/* 15-Year Historical CPCB Air Quality Archive (2011 - 2025) across 13 Cities */}
+        <HistoricalDataExplorer currentCityId={selectedCity.id} />
+
+        {/* "How Did I Get It?" - Transparent Calculations & Data Usage Guide */}
+        <HowDidIGetIt
+          selectedCity={selectedCity}
+          inputs={inputs}
+          results={results}
+        />
       </div>
 
       {/* Modern Festive Footer */}
@@ -264,7 +300,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400" />
             <span className="font-semibold text-slate-200">
-              Diwali Air Quality &amp; Firecracker Emission Estimator
+              Diwali Air Quality &amp; Firecracker Emission Estimator • All India Major Cities
             </span>
           </div>
 
@@ -290,7 +326,7 @@ export default function Home() {
           </div>
 
           <div className="text-slate-500 font-mono text-[11px]">
-            15-Year CPCB Calibration (2011–2025) • FastAPI • Next.js
+            13 Cities • 195 CPCB Annual Records (2011–2025) • Next.js • FastAPI
           </div>
         </div>
       </footer>

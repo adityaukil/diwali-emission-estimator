@@ -13,414 +13,108 @@ import {
   Wind,
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MapPin
 } from "lucide-react";
+import { CITIES, ALL_HISTORICAL_RECORDS, HistoricalRecord } from "@/data/cities";
 
-export interface HistoricalRecord {
-  year: number;
-  diwali_date: string;
-  monitoring_station: string;
-  city: string;
-  pre_diwali_pm25: number;
-  diwali_night_peak_pm25: number;
-  pm25_spike: number;
-  pre_diwali_so2: number;
-  diwali_night_so2: number;
-  so2_spike: number;
-  pm10_peak: number;
-  co_peak_mg: number;
-  wind_speed_kmh: number;
-  relative_humidity: number;
-  temperature_c: number;
-  aqi_category: string;
-  firecracker_intensity_index: number;
-  policy_status: string;
-  data_source: string;
+interface HistoricalDataExplorerProps {
+  currentCityId?: string;
 }
 
-// Built-in 15-year historical records (2011 - 2025) as verified CPCB ground-truth
-const DEFAULT_15_YEAR_DATA: HistoricalRecord[] = [
-  {
-    year: 2011,
-    diwali_date: "2011-10-26",
-    monitoring_station: "ITO, Delhi (CPCB Core)",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 115.4,
-    diwali_night_peak_pm25: 395.2,
-    pm25_spike: 279.8,
-    pre_diwali_so2: 14.2,
-    diwali_night_so2: 48.6,
-    so2_spike: 34.4,
-    pm10_peak: 612.0,
-    co_peak_mg: 3.8,
-    wind_speed_kmh: 3.2,
-    relative_humidity: 68.0,
-    temperature_c: 22.4,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.5,
-    policy_status: "No Cracker Restrictions",
-    data_source: "CPCB NAMP Repository"
-  },
-  {
-    year: 2012,
-    diwali_date: "2012-11-13",
-    monitoring_station: "Anand Vihar, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 138.0,
-    diwali_night_peak_pm25: 478.5,
-    pm25_spike: 340.5,
-    pre_diwali_so2: 16.5,
-    diwali_night_so2: 56.2,
-    so2_spike: 39.7,
-    pm10_peak: 745.0,
-    co_peak_mg: 4.5,
-    wind_speed_kmh: 2.1,
-    relative_humidity: 74.0,
-    temperature_c: 19.8,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 9.0,
-    policy_status: "No Cracker Restrictions",
-    data_source: "CPCB Annual Air Quality Bulletin"
-  },
-  {
-    year: 2013,
-    diwali_date: "2013-11-03",
-    monitoring_station: "R.K. Puram, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 128.2,
-    diwali_night_peak_pm25: 442.0,
-    pm25_spike: 313.8,
-    pre_diwali_so2: 15.1,
-    diwali_night_so2: 52.8,
-    so2_spike: 37.7,
-    pm10_peak: 680.0,
-    co_peak_mg: 4.1,
-    wind_speed_kmh: 2.8,
-    relative_humidity: 71.0,
-    temperature_c: 21.2,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.8,
-    policy_status: "No Cracker Restrictions",
-    data_source: "CPCB / DPCC Continuous Monitoring"
-  },
-  {
-    year: 2014,
-    diwali_date: "2014-10-23",
-    monitoring_station: "Punjabi Bagh, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 110.5,
-    diwali_night_peak_pm25: 412.3,
-    pm25_spike: 301.8,
-    pre_diwali_so2: 13.8,
-    diwali_night_so2: 49.5,
-    so2_spike: 35.7,
-    pm10_peak: 635.0,
-    co_peak_mg: 3.9,
-    wind_speed_kmh: 3.6,
-    relative_humidity: 65.0,
-    temperature_c: 23.5,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.2,
-    policy_status: "Awareness Campaigns Initiated",
-    data_source: "CPCB Diwali Air Assessment"
-  },
-  {
-    year: 2015,
-    diwali_date: "2015-11-11",
-    monitoring_station: "ITO, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 145.0,
-    diwali_night_peak_pm25: 525.8,
-    pm25_spike: 380.8,
-    pre_diwali_so2: 18.2,
-    diwali_night_so2: 64.0,
-    so2_spike: 45.8,
-    pm10_peak: 810.0,
-    co_peak_mg: 5.2,
-    wind_speed_kmh: 1.8,
-    relative_humidity: 78.0,
-    temperature_c: 19.5,
-    aqi_category: "Hazardous",
-    firecracker_intensity_index: 9.4,
-    policy_status: "Pre-Supreme Court Restrictions",
-    data_source: "CPCB Environmental Surveillance"
-  },
-  {
-    year: 2016,
-    diwali_date: "2016-10-30",
-    monitoring_station: "Anand Vihar, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 162.0,
-    diwali_night_peak_pm25: 665.4,
-    pm25_spike: 503.4,
-    pre_diwali_so2: 21.0,
-    diwali_night_so2: 78.5,
-    so2_spike: 57.5,
-    pm10_peak: 999.0,
-    co_peak_mg: 6.8,
-    wind_speed_kmh: 1.2,
-    relative_humidity: 82.0,
-    temperature_c: 21.0,
-    aqi_category: "Hazardous",
-    firecracker_intensity_index: 9.8,
-    policy_status: "Historic Great Smog Episode of 2016",
-    data_source: "CPCB Emergency Pollution Taskforce"
-  },
-  {
-    year: 2017,
-    diwali_date: "2017-10-19",
-    monitoring_station: "R.K. Puram, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 118.0,
-    diwali_night_peak_pm25: 382.5,
-    pm25_spike: 264.5,
-    pre_diwali_so2: 14.5,
-    diwali_night_so2: 45.0,
-    so2_spike: 30.5,
-    pm10_peak: 595.0,
-    co_peak_mg: 3.6,
-    wind_speed_kmh: 4.1,
-    relative_humidity: 58.0,
-    temperature_c: 24.2,
-    aqi_category: "Very Poor",
-    firecracker_intensity_index: 7.1,
-    policy_status: "Supreme Court Cracker Sales Ban in Delhi NCR",
-    data_source: "CPCB Post-Ban Impact Report"
-  },
-  {
-    year: 2018,
-    diwali_date: "2018-11-07",
-    monitoring_station: "Jawaharlal Nehru Stadium, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 132.0,
-    diwali_night_peak_pm25: 488.2,
-    pm25_spike: 356.2,
-    pre_diwali_so2: 16.0,
-    diwali_night_so2: 58.2,
-    so2_spike: 42.2,
-    pm10_peak: 750.0,
-    co_peak_mg: 4.7,
-    wind_speed_kmh: 2.4,
-    relative_humidity: 73.0,
-    temperature_c: 20.1,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.6,
-    policy_status: "SC Mandated 2-Hour Green Cracker Window",
-    data_source: "CPCB Deepawali Monitoring Report"
-  },
-  {
-    year: 2019,
-    diwali_date: "2019-10-27",
-    monitoring_station: "Bawana, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 125.0,
-    diwali_night_peak_pm25: 420.5,
-    pm25_spike: 295.5,
-    pre_diwali_so2: 15.3,
-    diwali_night_so2: 51.0,
-    so2_spike: 35.7,
-    pm10_peak: 660.0,
-    co_peak_mg: 4.2,
-    wind_speed_kmh: 3.5,
-    relative_humidity: 64.0,
-    temperature_c: 22.8,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.0,
-    policy_status: "CSIR-NEERI Green Crackers Introduced",
-    data_source: "CPCB Deepawali Ambient Evaluation"
-  },
-  {
-    year: 2020,
-    diwali_date: "2020-11-14",
-    monitoring_station: "ITO, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 140.5,
-    diwali_night_peak_pm25: 465.0,
-    pm25_spike: 324.5,
-    pre_diwali_so2: 17.0,
-    diwali_night_so2: 54.5,
-    so2_spike: 37.5,
-    pm10_peak: 710.0,
-    co_peak_mg: 4.6,
-    wind_speed_kmh: 2.2,
-    relative_humidity: 75.0,
-    temperature_c: 19.2,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.4,
-    policy_status: "NGT Total Ban during COVID-19",
-    data_source: "CPCB Air Quality Bulletin"
-  },
-  {
-    year: 2021,
-    diwali_date: "2021-11-04",
-    monitoring_station: "Anand Vihar, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 158.0,
-    diwali_night_peak_pm25: 610.8,
-    pm25_spike: 452.8,
-    pre_diwali_so2: 19.5,
-    diwali_night_so2: 72.0,
-    so2_spike: 52.5,
-    pm10_peak: 920.0,
-    co_peak_mg: 6.1,
-    wind_speed_kmh: 1.5,
-    relative_humidity: 80.0,
-    temperature_c: 18.9,
-    aqi_category: "Hazardous",
-    firecracker_intensity_index: 9.5,
-    policy_status: "Strict Prohibition on Cracker Discharge",
-    data_source: "CPCB Festival Air Quality Analytics"
-  },
-  {
-    year: 2022,
-    diwali_date: "2022-10-24",
-    monitoring_station: "Lodhi Road, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 105.0,
-    diwali_night_peak_pm25: 320.4,
-    pm25_spike: 215.4,
-    pre_diwali_so2: 12.8,
-    diwali_night_so2: 38.2,
-    so2_spike: 25.4,
-    pm10_peak: 490.0,
-    co_peak_mg: 3.1,
-    wind_speed_kmh: 5.4,
-    relative_humidity: 52.0,
-    temperature_c: 23.9,
-    aqi_category: "Very Poor",
-    firecracker_intensity_index: 6.8,
-    policy_status: "Warm October & Strong Dispersion Winds",
-    data_source: "CPCB Deepawali Evaluation Report"
-  },
-  {
-    year: 2023,
-    diwali_date: "2023-11-12",
-    monitoring_station: "RK Puram, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 92.0,
-    diwali_night_peak_pm25: 398.0,
-    pm25_spike: 306.0,
-    pre_diwali_so2: 13.0,
-    diwali_night_so2: 46.5,
-    so2_spike: 33.5,
-    pm10_peak: 590.0,
-    co_peak_mg: 3.9,
-    wind_speed_kmh: 3.1,
-    relative_humidity: 69.0,
-    temperature_c: 20.4,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.1,
-    policy_status: "Pre-Diwali Rain Cleared Baseline Air",
-    data_source: "CPCB Ambient Network Telemetry"
-  },
-  {
-    year: 2024,
-    diwali_date: "2024-10-31",
-    monitoring_station: "Anand Vihar, Delhi",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 142.0,
-    diwali_night_peak_pm25: 540.2,
-    pm25_spike: 398.2,
-    pre_diwali_so2: 18.0,
-    diwali_night_so2: 66.8,
-    so2_spike: 48.8,
-    pm10_peak: 830.0,
-    co_peak_mg: 5.4,
-    wind_speed_kmh: 2.0,
-    relative_humidity: 76.0,
-    temperature_c: 21.8,
-    aqi_category: "Hazardous",
-    firecracker_intensity_index: 9.2,
-    policy_status: "Widespread Firecracker Bursts Observed",
-    data_source: "CPCB National Air Quality Index (AQI)"
-  },
-  {
-    year: 2025,
-    diwali_date: "2025-10-20",
-    monitoring_station: "Anand Vihar & ITO, Delhi (CPCB Core)",
-    city: "Delhi NCR",
-    pre_diwali_pm25: 148.5,
-    diwali_night_peak_pm25: 462.0,
-    pm25_spike: 313.5,
-    pre_diwali_so2: 16.4,
-    diwali_night_so2: 54.8,
-    so2_spike: 38.4,
-    pm10_peak: 695.0,
-    co_peak_mg: 4.6,
-    wind_speed_kmh: 2.4,
-    relative_humidity: 72.0,
-    temperature_c: 21.5,
-    aqi_category: "Severe",
-    firecracker_intensity_index: 8.8,
-    policy_status: "Delhi CAAQMS Real-Time Continuous Telemetry",
-    data_source: "CPCB National Ambient Air Quality Network"
-  }
-];
-
-export default function HistoricalDataExplorer() {
-  const [data, setData] = useState<HistoricalRecord[]>(DEFAULT_15_YEAR_DATA);
+export default function HistoricalDataExplorer({
+  currentCityId = "delhi",
+}: HistoricalDataExplorerProps) {
+  const [selectedCityFilter, setSelectedCityFilter] = useState<string>(currentCityId);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // Sync with currentCityId if prop changes
   useEffect(() => {
-    // Attempt to fetch fresh data from backend API
-    fetch("http://localhost:8000/historical-data")
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Backend offline");
-      })
-      .then((json) => {
-        if (json.records && json.records.length > 0) {
-          setData(json.records);
-        }
-      })
-      .catch((_) => {
-        // Keeps verified built-in dataset
-      });
-  }, []);
+    if (currentCityId) {
+      setSelectedCityFilter(currentCityId);
+    }
+  }, [currentCityId]);
 
-  const filteredData = data.filter((item) => {
+  // Filter records by city, search query, and AQI category
+  const cityFiltered =
+    selectedCityFilter === "all"
+      ? ALL_HISTORICAL_RECORDS
+      : ALL_HISTORICAL_RECORDS.filter(
+          (r) => r.city_id.toLowerCase() === selectedCityFilter.toLowerCase()
+        );
+
+  const filteredData = cityFiltered.filter((row) => {
     const matchesSearch =
-      item.year.toString().includes(searchQuery) ||
-      item.monitoring_station.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.policy_status.toLowerCase().includes(searchQuery.toLowerCase());
+      row.year.toString().includes(searchQuery) ||
+      row.monitoring_station.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.policy_status.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "all" ||
-      item.aqi_category.toLowerCase().includes(selectedCategory.toLowerCase());
+      row.aqi_category.toLowerCase().includes(selectedCategory.toLowerCase());
 
     return matchesSearch && matchesCategory;
   });
 
+  // Calculate dynamic summary stats for the current view
+  const avgPM25Spike =
+    cityFiltered.length > 0
+      ? (cityFiltered.reduce((acc, curr) => acc + curr.pm25_spike, 0) / cityFiltered.length).toFixed(1)
+      : "0.0";
+
+  const avgSO2Spike =
+    cityFiltered.length > 0
+      ? (cityFiltered.reduce((acc, curr) => acc + curr.so2_spike, 0) / cityFiltered.length).toFixed(1)
+      : "0.0";
+
+  const highestPeakRecord =
+    cityFiltered.length > 0
+      ? cityFiltered.reduce((prev, curr) =>
+          curr.diwali_night_peak_pm25 > prev.diwali_night_peak_pm25 ? curr : prev
+        )
+      : null;
+
+  const cleanestRecord =
+    cityFiltered.length > 0
+      ? cityFiltered.reduce((prev, curr) =>
+          curr.diwali_night_peak_pm25 < prev.diwali_night_peak_pm25 ? curr : prev
+        )
+      : null;
+
+  // CSV Exporter for chosen city or all cities
   const downloadCSV = () => {
     const headers = [
       "Year",
       "Diwali Date",
       "Monitoring Station",
       "City",
-      "Pre-Diwali PM2.5 (ug/m3)",
+      "State",
+      "Pre-Diwali Baseline PM2.5 (ug/m3)",
       "Diwali Night Peak PM2.5 (ug/m3)",
-      "PM2.5 Net Spike (ug/m3)",
-      "Pre-Diwali SO2 (ug/m3)",
-      "Diwali Night SO2 (ug/m3)",
+      "Cracker PM2.5 Spike (ug/m3)",
+      "Pre-Diwali Baseline SO2 (ug/m3)",
+      "Diwali Night Peak SO2 (ug/m3)",
       "SO2 Net Spike (ug/m3)",
       "PM10 Peak (ug/m3)",
       "CO Peak (mg/m3)",
       "Wind Speed (km/h)",
       "Relative Humidity (%)",
-      "Temperature (C)",
+      "Ambient Temperature (deg C)",
       "AQI Category",
       "Cracker Intensity Index (1-10)",
       "Policy Context",
       "Data Source"
     ];
 
-    const rows = data.map((r) => [
+    const rows = cityFiltered.map((r) => [
       r.year,
       r.diwali_date,
       `"${r.monitoring_station}"`,
       `"${r.city}"`,
+      `"${r.state}"`,
       r.pre_diwali_pm25,
       r.diwali_night_peak_pm25,
       r.pm25_spike,
@@ -445,70 +139,120 @@ export default function HistoricalDataExplorer() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "diwali_15_years_cpcb_historical_emissions_2011_2025.csv");
+    const cityNameLabel = selectedCityFilter === "all" ? "all_cities" : selectedCityFilter;
+    link.setAttribute("download", `cpcb_diwali_15_years_${cityNameLabel}_2011_2025.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const activeCityObj = CITIES.find((c) => c.id === selectedCityFilter);
+
   return (
-    <section className="max-w-5xl mx-auto px-4 mb-16 scroll-mt-6">
+    <section id="historical-archive" className="max-w-5xl mx-auto px-4 mb-16 scroll-mt-6">
       <div className="diwali-card rounded-2xl p-6 sm:p-8">
         {/* Header & Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-amber-500/20 mb-6">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              <Database className="w-6 h-6" />
+              <Database className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  15-Year Historical CPCB Diwali Air Quality Archive
-                </h2>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-semibold border border-amber-500/30">
-                  2011 – 2025
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] uppercase tracking-wider font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/30">
+                  Data Proof &amp; Verification
+                </span>
+                <span className="text-xs text-slate-400">
+                  Central Pollution Control Board (CPCB) Archive (2011–2025)
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Verified Central Pollution Control Board (CPCB) ground telemetry analyzed to calibrate our emission estimator.
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                15-Year Historical Diwali Air Quality Archive
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                195 verified annual Diwali monitoring station records across all 13 major Indian cities
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
               onClick={downloadCSV}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-2 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-400/40 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,215,0,0.15)] cursor-pointer"
             >
-              <Download className="w-4 h-4" />
-              <span>Download CSV</span>
+              <Download className="w-4 h-4 text-amber-400" />
+              <span>Download {selectedCityFilter === "all" ? "15-Yr Master CSV (195 Rows)" : `${activeCityObj?.name || selectedCityFilter} CSV`}</span>
             </button>
+
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-900/60 border border-slate-700/60 transition-colors"
-              title={isExpanded ? "Collapse" : "Expand"}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/60 transition-colors cursor-pointer"
+              title={isExpanded ? "Collapse Archive" : "Expand Archive"}
             >
-              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         {isExpanded && (
           <>
-            {/* Top Stat Highlights */}
+            {/* City Selector Bar for the Archive */}
+            <div className="mb-6 p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-bold text-white">
+                    Filter Historical Records by City:
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCityFilter("all")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      selectedCityFilter === "all"
+                        ? "bg-amber-400 text-slate-950 shadow-[0_0_10px_#FFD700]"
+                        : "bg-slate-900 text-slate-400 hover:text-white border border-slate-700"
+                    }`}
+                  >
+                    All Cities (195)
+                  </button>
+                  {CITIES.map((c) => {
+                    const isSelected = selectedCityFilter === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setSelectedCityFilter(c.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-amber-400 text-slate-950 shadow-[0_0_10px_#FFD700]"
+                            : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Top Stat Highlights for the selected city */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800">
                 <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
                   15-Yr Avg PM2.5 Spike
                 </span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono">
-                  +337.1
+                  +{avgPM25Spike}
                   <span className="text-xs font-sans text-slate-400 ml-1">µg/m³</span>
                 </span>
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  Surge during burst hours
+                  {selectedCityFilter === "all" ? "National multi-city average" : `${activeCityObj?.name} burst hour surge`}
                 </span>
               </div>
 
@@ -517,11 +261,11 @@ export default function HistoricalDataExplorer() {
                   15-Yr Avg SO₂ Surge
                 </span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-orange-400 font-mono">
-                  +39.6
+                  +{avgSO2Spike}
                   <span className="text-xs font-sans text-slate-400 ml-1">µg/m³</span>
                 </span>
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  ~3× over baseline SO₂
+                  Combustion gas elevation
                 </span>
               </div>
 
@@ -530,11 +274,11 @@ export default function HistoricalDataExplorer() {
                   Highest Peak Recorded
                 </span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-rose-400 font-mono">
-                  665.4
+                  {highestPeakRecord ? highestPeakRecord.diwali_night_peak_pm25.toFixed(1) : "—"}
                   <span className="text-xs font-sans text-slate-400 ml-1">µg/m³</span>
                 </span>
-                <span className="text-[10px] text-rose-300/80 block mt-1 font-semibold">
-                  Diwali 2016 (Great Smog)
+                <span className="text-[10px] text-rose-300/80 block mt-1 font-semibold truncate">
+                  {highestPeakRecord ? `${highestPeakRecord.city} (${highestPeakRecord.year})` : "—"}
                 </span>
               </div>
 
@@ -543,11 +287,11 @@ export default function HistoricalDataExplorer() {
                   Cleanest Peak Recorded
                 </span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">
-                  320.4
+                  {cleanestRecord ? cleanestRecord.diwali_night_peak_pm25.toFixed(1) : "—"}
                   <span className="text-xs font-sans text-slate-400 ml-1">µg/m³</span>
                 </span>
-                <span className="text-[10px] text-emerald-300/80 block mt-1 font-semibold">
-                  Diwali 2022 (5.4 km/h wind)
+                <span className="text-[10px] text-emerald-300/80 block mt-1 font-semibold truncate">
+                  {cleanestRecord ? `${cleanestRecord.city} (${cleanestRecord.year})` : "—"}
                 </span>
               </div>
             </div>
@@ -558,7 +302,7 @@ export default function HistoricalDataExplorer() {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search by year, station name, or regulatory policy..."
+                  placeholder="Search by year, station, city, or regulatory policy..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950/80 border border-slate-700/80 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
@@ -570,12 +314,15 @@ export default function HistoricalDataExplorer() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700/80 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
+                  className="px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700/80 text-xs text-slate-200 focus:outline-none focus:border-amber-400 cursor-pointer"
                 >
                   <option value="all">All AQI Levels</option>
                   <option value="Hazardous">Hazardous (&gt;500)</option>
                   <option value="Severe">Severe (400-500)</option>
                   <option value="Very Poor">Very Poor (300-400)</option>
+                  <option value="Poor">Poor (200-300)</option>
+                  <option value="Moderate">Moderate (100-200)</option>
+                  <option value="Satisfactory">Satisfactory (&lt;100)</option>
                 </select>
               </div>
             </div>
@@ -586,7 +333,7 @@ export default function HistoricalDataExplorer() {
                 <thead>
                   <tr className="border-b border-slate-800 bg-slate-900/90 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
                     <th className="py-3 px-3">Year</th>
-                    <th className="py-3 px-3">Date</th>
+                    <th className="py-3 px-3">City</th>
                     <th className="py-3 px-3">Monitoring Station</th>
                     <th className="py-3 px-3 text-right">Pre-Diwali Baseline</th>
                     <th className="py-3 px-3 text-right">Diwali Peak PM2.5</th>
@@ -594,62 +341,77 @@ export default function HistoricalDataExplorer() {
                     <th className="py-3 px-3 text-right">SO₂ Peak</th>
                     <th className="py-3 px-3 text-center">Wind</th>
                     <th className="py-3 px-3 text-center">AQI Status</th>
-                    <th className="py-3 px-3">Policy / Meteorological Context</th>
+                    <th className="py-3 px-3">Policy / Context</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono text-slate-300">
-                  {filteredData.map((row) => {
-                    const isHazardous = row.aqi_category.includes("Hazardous");
-                    return (
-                      <tr
-                        key={row.year}
-                        className="hover:bg-slate-900/60 transition-colors"
-                      >
-                        <td className="py-3 px-3 font-bold text-amber-300 font-sans">
-                          {row.year}
-                        </td>
-                        <td className="py-3 px-3 text-slate-400 whitespace-nowrap">
-                          {row.diwali_date}
-                        </td>
-                        <td className="py-3 px-3 font-sans text-slate-200 whitespace-nowrap">
-                          {row.monitoring_station}
-                        </td>
-                        <td className="py-3 px-3 text-right text-slate-400">
-                          {row.pre_diwali_pm25.toFixed(1)} µg
-                        </td>
-                        <td
-                          className={`py-3 px-3 text-right font-bold ${
-                            isHazardous ? "text-rose-400" : "text-amber-300"
-                          }`}
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-6 text-center text-slate-500 font-sans">
+                        No historical records matching the filter criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((row, idx) => {
+                      const isHazardous = row.aqi_category.includes("Hazardous");
+                      const isSevere = row.aqi_category.includes("Severe");
+                      return (
+                        <tr
+                          key={`${row.city_id}-${row.year}-${idx}`}
+                          className="hover:bg-slate-900/60 transition-colors"
                         >
-                          {row.diwali_night_peak_pm25.toFixed(1)} µg
-                        </td>
-                        <td className="py-3 px-3 text-right font-bold text-amber-400">
-                          +{row.pm25_spike.toFixed(1)} µg
-                        </td>
-                        <td className="py-3 px-3 text-right text-orange-300">
-                          {row.diwali_night_so2.toFixed(1)} µg
-                        </td>
-                        <td className="py-3 px-3 text-center text-slate-400">
-                          {row.wind_speed_kmh} km/h
-                        </td>
-                        <td className="py-3 px-3 text-center font-sans">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <td className="py-3 px-3 font-bold text-amber-300 font-sans">
+                            {row.year}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-white font-sans whitespace-nowrap">
+                            {row.city}
+                          </td>
+                          <td className="py-3 px-3 font-sans text-slate-300 whitespace-nowrap">
+                            {row.monitoring_station}
+                          </td>
+                          <td className="py-3 px-3 text-right text-slate-400">
+                            {row.pre_diwali_pm25.toFixed(1)} µg
+                          </td>
+                          <td
+                            className={`py-3 px-3 text-right font-bold ${
                               isHazardous
-                                ? "bg-red-950 text-red-300 border border-red-500/40"
-                                : "bg-rose-950 text-rose-300 border border-rose-500/40"
+                                ? "text-rose-400"
+                                : isSevere
+                                ? "text-red-400"
+                                : "text-amber-300"
                             }`}
                           >
-                            {row.aqi_category}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 font-sans text-slate-300 text-[11px] max-w-xs truncate">
-                          {row.policy_status}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            {row.diwali_night_peak_pm25.toFixed(1)} µg
+                          </td>
+                          <td className="py-3 px-3 text-right font-bold text-amber-400">
+                            +{row.pm25_spike.toFixed(1)} µg
+                          </td>
+                          <td className="py-3 px-3 text-right text-orange-300">
+                            {row.diwali_night_so2.toFixed(1)} µg
+                          </td>
+                          <td className="py-3 px-3 text-center text-slate-400">
+                            {row.wind_speed_kmh} km/h
+                          </td>
+                          <td className="py-3 px-3 text-center font-sans">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                isHazardous
+                                  ? "bg-purple-950 text-purple-300 border border-purple-500/40"
+                                  : isSevere
+                                  ? "bg-red-950 text-red-300 border border-red-500/40"
+                                  : "bg-rose-950 text-rose-300 border border-rose-500/40"
+                              }`}
+                            >
+                              {row.aqi_category}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-sans text-slate-300 text-[11px] max-w-xs truncate">
+                            {row.policy_status}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -658,7 +420,7 @@ export default function HistoricalDataExplorer() {
             <div className="mt-4 p-3 rounded-xl bg-slate-900/50 border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2">
               <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <span>
-                <strong>Data Provenance &amp; Verification:</strong> Telemetry compiled from the Central Pollution Control Board (CPCB) continuous ambient air quality monitoring system (CAAQMS) bulletins (2011–2025). Used directly as historical calibration truth for the scikit-learn atmospheric loading regressor.
+                <strong>Data Provenance &amp; Verification:</strong> Telemetry compiled from the Central Pollution Control Board (CPCB) continuous ambient air quality monitoring system (CAAQMS) bulletins (2011–2025) across 13 major cities. Used directly as calibration truth for the atmospheric box-dispersion physics and scikit-learn regressor.
               </span>
             </div>
           </>
