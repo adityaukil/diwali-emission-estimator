@@ -437,6 +437,20 @@ def download_historical_csv(city: Optional[str] = Query(None, description="Optio
     )
 
 
+@app.get("/download-historical-excel")
+def download_historical_excel():
+    excel_path = os.path.join(os.path.dirname(__file__), "diwali_15_years_all_cities_cpcb_data.xlsx")
+    if not os.path.exists(excel_path):
+        from create_multi_sheet_excel import build_excel_workbook
+        build_excel_workbook()
+
+    return FileResponse(
+        excel_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="cpcb_diwali_15_years_all_cities_cpcb_data.xlsx"
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

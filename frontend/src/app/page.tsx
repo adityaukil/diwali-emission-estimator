@@ -8,7 +8,7 @@ import ResultsDashboard, { PredictionResult } from "@/components/ResultsDashboar
 import WHORedirectAlert from "@/components/WHORedirectAlert";
 import HistoricalDataExplorer from "@/components/HistoricalDataExplorer";
 import HowDidIGetIt from "@/components/HowDidIGetIt";
-import { Sparkles, ExternalLink, ShieldCheck, Database } from "lucide-react";
+import { Sparkles, ExternalLink, ShieldCheck, Database, FileSpreadsheet, Download } from "lucide-react";
 import { CITIES, CityConfig, getCityById } from "@/data/cities";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -292,6 +292,36 @@ export default function Home() {
           inputs={inputs}
           results={results}
         />
+
+        {/* End of Page Dataset Download Section */}
+        <div className="max-w-5xl mx-auto px-4 mb-16">
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900/90 via-emerald-950/40 to-slate-900/90 border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.1)] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <FileSpreadsheet className="w-8 h-8 text-emerald-400" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-widest px-2.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-500/30 font-bold">
+                  Complete Open-Data Archive (2011–2025)
+                </span>
+                <h3 className="text-lg font-bold text-white mt-1">
+                  Download All-India 15-Year Historical Diwali Data (.xlsx)
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-xl">
+                  Official CPCB continuous air monitoring telemetry for 13 major cities across India. Organized in <strong>separate sheets for each city</strong> plus a consolidated Master Sheet (195 annual records).
+                </p>
+              </div>
+            </div>
+            <a
+              href="/diwali_15_years_all_cities_cpcb_data.xlsx"
+              download="diwali_15_years_all_cities_cpcb_data.xlsx"
+              className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.35)] shrink-0 cursor-pointer"
+            >
+              <Download className="w-5 h-5" />
+              <span>Download Excel (.xlsx)</span>
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Modern Festive Footer */}

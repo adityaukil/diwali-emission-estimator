@@ -14,7 +14,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  MapPin
+  MapPin,
+  FileSpreadsheet
 } from "lucide-react";
 import { CITIES, ALL_HISTORICAL_RECORDS, HistoricalRecord } from "@/data/cities";
 
@@ -176,13 +177,23 @@ export default function HistoricalDataExplorer({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <a
+              href="/diwali_15_years_all_cities_cpcb_data.xlsx"
+              download="diwali_15_years_all_cities_cpcb_data.xlsx"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600/30 via-emerald-500/40 to-emerald-600/30 hover:from-emerald-600/40 hover:to-emerald-500/50 text-emerald-300 border border-emerald-500/50 text-xs font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+              title="Download Complete 15-Year Workbook (14 Sheets: Master Summary + 13 City Sheets)"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <span>Download Excel Workbook (.xlsx)</span>
+            </a>
+
             <button
               type="button"
               onClick={downloadCSV}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-400/40 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,215,0,0.15)] cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-400/40 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,215,0,0.15)] cursor-pointer"
             >
               <Download className="w-4 h-4 text-amber-400" />
-              <span>Download {selectedCityFilter === "all" ? "15-Yr Master CSV (195 Rows)" : `${activeCityObj?.name || selectedCityFilter} CSV`}</span>
+              <span>Download {selectedCityFilter === "all" ? "15-Yr Master CSV" : `${activeCityObj?.name || selectedCityFilter} CSV`}</span>
             </button>
 
             <button
@@ -422,6 +433,34 @@ export default function HistoricalDataExplorer({
               <span>
                 <strong>Data Provenance &amp; Verification:</strong> Telemetry compiled from the Central Pollution Control Board (CPCB) continuous ambient air quality monitoring system (CAAQMS) bulletins (2011–2025) across 13 major cities. Used directly as calibration truth for the atmospheric box-dispersion physics and scikit-learn regressor.
               </span>
+            </div>
+
+            {/* Excel Multi-Sheet Download Banner */}
+            <div className="mt-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 via-slate-900/90 to-emerald-950/60 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                  <FileSpreadsheet className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>15-Year Multi-City Official Excel Workbook (.xlsx)</span>
+                    <span className="text-[10px] bg-emerald-900/80 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-mono">
+                      14 Separate Sheets
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Includes Master All-Cities summary (195 rows) plus 13 individual sheets for Delhi NCR, Mumbai, Kolkata, Chennai, Bengaluru, Hyderabad, Ahmedabad, Pune, Lucknow, Patna, Jaipur, Varanasi, &amp; Chandigarh.
+                  </p>
+                </div>
+              </div>
+              <a
+                href="/diwali_15_years_all_cities_cpcb_data.xlsx"
+                download="diwali_15_years_all_cities_cpcb_data.xlsx"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Multi-Sheet Excel (.xlsx)</span>
+              </a>
             </div>
           </>
         )}
