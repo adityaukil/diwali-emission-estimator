@@ -17,8 +17,11 @@ import {
   Sparkles,
   MapPin,
   HelpCircle,
-  ArrowDown
+  ArrowDown,
+  Calculator,
+  CheckCircle2
 } from "lucide-react";
+import GreenDiwaliGuide from "./GreenDiwaliGuide";
 
 export interface GasesReleased {
   so2_grams: number;
@@ -159,10 +162,67 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
           </div>
         </div>
 
-        {/* CSS GRID: Main Metrics (4 columns on desktop, 2 on tablet, 1 on mobile) */}
+        {/* ANIMATED CALCULATION PIPELINE & MASS STOICHIOMETRY */}
+        <div className="mb-6 p-4 sm:p-5 rounded-xl bg-slate-950/90 border border-amber-500/30 overflow-hidden shadow-[0_0_20px_rgba(255,215,0,0.06)] animate-slide-up-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Calculator className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                Live Atmospheric &amp; Stoichiometric Calculation Pipeline
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Calibrated to {cityName} micro-climate (&kappa;={results.city_dispersion_multiplier || 1.0})</span>
+            </span>
+          </div>
+
+          {/* Pipeline Stages */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+            {/* Stage 1 */}
+            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-amber-500/30 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
+              <div>
+                <div className="text-[11px] font-bold text-white">Mass Ingestion</div>
+                <div className="text-[10px] text-slate-400 font-mono">&sum; (N_i &times; m_i)</div>
+              </div>
+            </div>
+            {/* Stage 2 */}
+            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-orange-500/30 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/40 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+              <div>
+                <div className="text-[11px] font-bold text-white">Stoichiometric Yield</div>
+                <div className="text-[10px] text-slate-400 font-mono">Q = &sum; (m_i &times; EF_i)</div>
+              </div>
+            </div>
+            {/* Stage 3 */}
+            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-sky-500/30 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
+              <div>
+                <div className="text-[11px] font-bold text-white">Box Dispersion</div>
+                <div className="text-[10px] text-slate-400 font-mono">&Delta;C = [Q / (U&middot;H&middot;W)] &times; &kappa;</div>
+              </div>
+            </div>
+            {/* Stage 4 */}
+            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-emerald-500/30 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
+              <div>
+                <div className="text-[11px] font-bold text-white">AQI Synthesis</div>
+                <div className="text-[10px] text-slate-400 font-mono">C_final = C_base + &Delta;C</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Calculation Progress Bar */}
+          <div className="mt-3 w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-amber-500 via-orange-400 to-emerald-400 rounded-full animate-pulse transition-all duration-1000 w-full" />
+          </div>
+        </div>
+
+        {/* CSS GRID: Main Metrics (Staggered Slide-In Entrance) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {/* Card 1: PM2.5 Spike */}
-          <div className="p-5 rounded-xl bg-slate-950/80 border border-amber-500/30 shadow-[0_0_15px_rgba(255,215,0,0.08)] flex flex-col justify-between">
+          <div className="p-5 rounded-xl bg-slate-950/80 border border-amber-500/30 shadow-[0_0_15px_rgba(255,215,0,0.08)] flex flex-col justify-between animate-slide-up-1">
             <div>
               <div className="flex items-center justify-between text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">
                 <span>PM2.5 Ambient Spike</span>
@@ -184,7 +244,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
           </div>
 
           {/* Card 2: SO2 Spike */}
-          <div className="p-5 rounded-xl bg-slate-950/80 border border-amber-500/30 shadow-[0_0_15px_rgba(255,215,0,0.08)] flex flex-col justify-between">
+          <div className="p-5 rounded-xl bg-slate-950/80 border border-amber-500/30 shadow-[0_0_15px_rgba(255,215,0,0.08)] flex flex-col justify-between animate-slide-up-2">
             <div>
               <div className="flex items-center justify-between text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">
                 <span>SO₂ Sulfur Dioxide Spike</span>
@@ -206,7 +266,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
           </div>
 
           {/* Card 3: PM10 Particulate Spike */}
-          <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+          <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between animate-slide-up-3">
             <div>
               <div className="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
                 <span>PM10 Coarse Ash</span>
@@ -225,7 +285,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
           </div>
 
           {/* Card 4: AQI Impact Category */}
-          <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+          <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between animate-slide-up-4">
             <div>
               <div className="flex items-center justify-between text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
                 <span>AQI Category</span>
@@ -251,7 +311,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
         </div>
 
         {/* PROMINENT GASES & CHEMICAL MASS RELEASED SECTION */}
-        <div className="mb-6 p-6 rounded-xl bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 border border-amber-500/40 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+        <div className="mb-6 p-6 rounded-xl bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 border border-amber-500/40 shadow-[0_0_20px_rgba(255,215,0,0.1)] animate-slide-up-4">
           <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-4">
             <div className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-amber-400" />
@@ -361,7 +421,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
         </div>
 
         {/* WHO Guideline Exceedance & Health Impact Panel */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up-5">
           <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
             <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex-shrink-0">
               <ShieldAlert className="w-5 h-5" />
@@ -403,7 +463,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
         </div>
 
         {/* Itemized Firecracker Source Breakdown */}
-        <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 mb-6">
+        <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 mb-6 animate-slide-up-5">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300 mb-4 flex items-center gap-2">
             <Info className="w-4 h-4 text-amber-400" />
             Firecracker Source Contribution Breakdown ({cityName})
@@ -436,7 +496,7 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
         </div>
 
         {/* Official CPCB & Health Advisory Box */}
-        <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-start gap-3">
+        <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-start gap-3 animate-slide-up-5">
           <HeartPulse className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="text-xs sm:text-sm">
             <strong className="text-amber-200 block mb-0.5">
@@ -447,6 +507,9 @@ export default function ResultsDashboard({ results }: ResultsDashboardProps) {
             </p>
           </div>
         </div>
+
+        {/* REAL-TIME TYPEWRITER GREEN DIWALI GUIDE */}
+        <GreenDiwaliGuide cityName={cityName} />
       </div>
     </section>
   );
